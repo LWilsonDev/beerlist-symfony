@@ -4,10 +4,14 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @UniqueEntity(fields={"username"}, message="There is already an account with this username")
+ * @UniqueEntity(fields="email", message="Email already taken")
  */
 class User implements UserInterface
 {
@@ -29,10 +33,19 @@ class User implements UserInterface
     private $roles = [];
 
     /**
-     * @var string The hashed password
-     * @ORM\Column(type="string")
+     * @Assert\NotBlank()
+     * @Assert\Length(max=4096)
+     */
+    private $plainPassword;
+
+    /**
+     * The below length depends on the "algorithm" you use for encoding
+     * the password, but this works well with bcrypt.
+     *
+     * @ORM\Column(type="string", length=64)
      */
     private $password;
+
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -80,20 +93,26 @@ class User implements UserInterface
         return $this;
     }
 
-    /**
-     * @see UserInterface
-     */
-    public function getPassword(): string
+    public function getPlainPassword()
     {
-        return (string) $this->password;
+        return $this->plainPassword;
     }
 
-    public function setPassword(string $password): self
+    public function setPlainPassword($password)
+    {
+        $this->plainPassword = $password;
+    }
+
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+    public function setPassword($password)
     {
         $this->password = $password;
-
-        return $this;
     }
+
 
     /**
      * @see UserInterface
